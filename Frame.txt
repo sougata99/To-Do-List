@@ -1,0 +1,212 @@
+package ToDoListJFrame;
+
+import java.awt.BorderLayout;
+import java.awt.EventQueue;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
+import javax.swing.JLabel;
+import javax.swing.JComboBox;
+import javax.swing.JTextArea;
+import javax.swing.JButton;
+import java.awt.Font;
+import javax.swing.DefaultComboBoxModel;
+import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Time;
+import java.awt.event.ActionEvent;
+import java.awt.Color;
+
+public class Frame extends JFrame {
+
+	private JPanel contentPane;
+	private JButton btnNewButton_3;
+
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					Frame frame = new Frame();
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	
+	//public static JLabel lblNewLabel = new JLabel("JOB_ID :");
+	//public static JLabel lblNewLabel_1 = new JLabel("DATE :");
+	//public static JLabel lblNewLabel_2 = new JLabel("TIME :");
+	//public static JTextArea textArea1 = new JTextArea();
+	
+	public Frame(Connection con,int jobid, String job_id, Date date, Time time, String job, int status) {
+
+		setForeground(new Color(0, 255, 255));
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 487, 436);
+		contentPane = new JPanel();
+		contentPane.setBackground(new Color(0, 255, 255));
+		contentPane.setForeground(new Color(255, 255, 255));
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+		
+		JLabel lblNewLabel = new JLabel(job_id);
+		lblNewLabel.setForeground(new Color(0, 0, 139));
+		lblNewLabel.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblNewLabel.setBounds(10, 46, 236, 31);
+		contentPane.add(lblNewLabel);
+		
+		JLabel lblNewLabel_1 = new JLabel("DATE :"+date);
+		lblNewLabel_1.setForeground(new Color(0, 0, 139));
+		lblNewLabel_1.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblNewLabel_1.setBounds(10, 83, 236, 21);
+		contentPane.add(lblNewLabel_1);
+		
+		JLabel lblNewLabel_2 = new JLabel("TIME :"+time);
+		lblNewLabel_2.setForeground(new Color(0, 0, 139));
+		lblNewLabel_2.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblNewLabel_2.setBounds(10, 114, 236, 21);
+		contentPane.add(lblNewLabel_2);
+		
+		JComboBox comboBox = new JComboBox();
+		comboBox.setFont(new Font("Tahoma", Font.BOLD | Font.ITALIC, 18));
+		comboBox.setModel(new DefaultComboBoxModel(new String[] {"Pending", "Done", "Aborted"}));
+		comboBox.setSelectedIndex(status);
+		comboBox.setBounds(308, 46, 125, 31);
+		contentPane.add(comboBox);
+		
+		JTextArea textArea1 = new JTextArea(job);
+		textArea1.setBounds(45, 145, 388, 127);
+		contentPane.add(textArea1);
+		
+		JButton btnNewButton = new JButton("Delete");
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					PreparedStatement ps = con.prepareStatement("delete from jobs where JOB_ID=?");
+					ps.setInt(1, jobid);
+					ps.execute();
+					dispose();
+					ToDoListJFrame.frame.setVisible(true);
+				}catch(Exception se) {
+					System.out.println("exception :"+se.getMessage());
+				}
+			}
+		});
+		btnNewButton.setForeground(new Color(255, 255, 255));
+		btnNewButton.setBackground(new Color(0, 0, 139));
+		btnNewButton.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		btnNewButton.setBounds(45, 282, 104, 31);
+		contentPane.add(btnNewButton);
+		
+		JButton btnNewButton_1 = new JButton("Update");
+		btnNewButton_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					PreparedStatement ps=con.prepareStatement("update jobs set STATUS=? where JOB_ID=?");
+					ps.setString(1, comboBox.getSelectedItem().toString());
+					ps.setInt(2, jobid);
+					ps.execute();
+					dispose();
+					ToDoListJFrame.frame.setVisible(true);
+				}catch(Exception se) {
+					System.out.println("exception :"+se.getMessage());
+				}
+			}
+		});
+		btnNewButton_1.setForeground(new Color(255, 255, 255));
+		btnNewButton_1.setBackground(new Color(0, 0, 139));
+		btnNewButton_1.setFont(new Font("Tahoma", Font.BOLD, 15));
+		btnNewButton_1.setBounds(329, 282, 104, 31);
+		contentPane.add(btnNewButton_1);
+		
+		JButton btnNewButton_2 = new JButton("Cancel");
+		btnNewButton_2.setForeground(new Color(255, 255, 255));
+		btnNewButton_2.setBackground(new Color(0, 0, 139));
+		btnNewButton_2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				dispose();
+				ToDoListJFrame.frame.setVisible(true);
+			}
+		});
+		btnNewButton_2.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		btnNewButton_2.setBounds(180, 284, 116, 29);
+		contentPane.add(btnNewButton_2);
+	}
+	
+	public Frame() {
+		setForeground(new Color(0, 255, 255));
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 487, 436);
+		contentPane = new JPanel();
+		contentPane.setBackground(new Color(0, 255, 255));
+		contentPane.setForeground(new Color(255, 255, 255));
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+		
+		JLabel lblNewLabel = new JLabel("JOB_ID :");
+		lblNewLabel.setForeground(new Color(0, 0, 139));
+		lblNewLabel.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblNewLabel.setBounds(10, 46, 236, 31);
+		contentPane.add(lblNewLabel);
+		
+		JLabel lblNewLabel_1 = new JLabel("DATE :");
+		lblNewLabel_1.setForeground(new Color(0, 0, 139));
+		lblNewLabel_1.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblNewLabel_1.setBounds(10, 83, 236, 21);
+		contentPane.add(lblNewLabel_1);
+		
+		JLabel lblNewLabel_2 = new JLabel("TIME :");
+		lblNewLabel_2.setForeground(new Color(0, 0, 139));
+		lblNewLabel_2.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblNewLabel_2.setBounds(10, 114, 236, 21);
+		contentPane.add(lblNewLabel_2);
+		
+		JComboBox comboBox = new JComboBox();
+		comboBox.setFont(new Font("Tahoma", Font.BOLD | Font.ITALIC, 18));
+		comboBox.setModel(new DefaultComboBoxModel(new String[] {"pending", "done", "aborted"}));
+		comboBox.setBounds(308, 46, 125, 31);
+		contentPane.add(comboBox);
+		
+		JTextArea textArea1 = new JTextArea();
+		textArea1.setBounds(45, 145, 388, 127);
+		contentPane.add(textArea1);
+		
+		JButton btnNewButton = new JButton("Delete");
+		btnNewButton.setForeground(new Color(255, 255, 255));
+		btnNewButton.setBackground(new Color(0, 0, 139));
+		btnNewButton.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		btnNewButton.setBounds(45, 282, 104, 31);
+		contentPane.add(btnNewButton);
+		
+		btnNewButton_3 = new JButton("Update");
+		btnNewButton_3.setForeground(new Color(255, 255, 255));
+		btnNewButton_3.setBackground(new Color(0, 0, 139));
+		btnNewButton_3.setFont(new Font("Tahoma", Font.BOLD, 15));
+		btnNewButton_3.setBounds(329, 282, 104, 31);
+		contentPane.add(btnNewButton_3);
+		
+		JButton btnNewButton_2 = new JButton("Cancel");
+		btnNewButton_2.setForeground(new Color(255, 255, 255));
+		btnNewButton_2.setBackground(new Color(0, 0, 139));
+		btnNewButton_2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ToDoListJFrame.frame.setVisible(true);;
+			}
+		});
+		btnNewButton_2.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		btnNewButton_2.setBounds(180, 284, 116, 29);
+		contentPane.add(btnNewButton_2);
+	}
+}

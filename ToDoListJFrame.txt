@@ -1,0 +1,301 @@
+package ToDoListJFrame;
+
+
+
+import java.awt.BorderLayout;
+import java.awt.EventQueue;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.JTabbedPane;
+import javax.swing.JLabel;
+import java.awt.Font;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.awt.Color;
+import javax.swing.JTextArea;
+import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.ActionEvent;
+import javax.swing.JTable;
+
+public class ToDoListJFrame extends JFrame {
+
+	/**
+	 * 
+	 */
+	private JPanel contentPane;
+
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+	
+	
+	public static ToDoListJFrame frame = new ToDoListJFrame();
+	public int job_id;
+	private JTabbedPane tabbedPane;
+	public Connection con;
+	private JTable table;
+	Object[][] data = null;
+	public DefaultTableModel model;
+	
+	public void getMySQLConnection(){
+		try
+		{
+			con = DriverManager.getConnection("jdbc:mysql://localhost:3306/db1", "root" , "your_password");
+		}catch(SQLException e) {
+			System.out.println("SQl Exception : "+e.getMessage());			
+		}
+	}
+	
+	public void fetchJobs() {
+		try {
+			PreparedStatement ps = con.prepareStatement("select * from db1.jobs");
+			int rowCount = 0;
+			ResultSet rs = ps.executeQuery();
+			
+			while(rs.next()) {
+				rowCount++;
+			}
+			
+			data = new Object[rowCount][5];
+			
+			//data[0][0]="JOB_ID";
+			//data[0][1]="DATA";
+			//data[0][2]="TIME";
+			//data[0][3]="JOB";
+			//data[0][4]="STATUS";
+			
+			rowCount=0;
+			rs = ps.executeQuery();
+			while(rs.next()) {
+				data[rowCount][0] = rs.getInt("JOB_ID");
+				data[rowCount][1] = rs.getString("DATE");
+				data[rowCount][2] = rs.getString("TIME");
+				data[rowCount][3] = rs.getString("JOB");
+				data[rowCount][4] = rs.getString("STATUS");
+				rowCount++;
+			}
+			
+			String[] colNames = {"JOB_ID" , "DATE" , "TIME" , "JOB" , "STATUS"};
+			table.setModel(new DefaultTableModel(data, colNames) {
+				/**
+				 * 
+				 */
+				private static final long serialVersionUID = 1L;
+
+				public boolean isCellEditable(int row, int column) {
+					return false;
+				}
+			});
+		}catch(SQLException e) {
+			System.out.println("SQL Exception in select");
+		}
+		
+	}
+	
+	public void registerListner() {
+		try {
+		tabbedPane.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				// TODO Auto-generated method stub
+				int selectedIndex = tabbedPane.getSelectedIndex();
+				if(selectedIndex==1) {
+					fetchJobs();
+				}
+				
+			}
+		});
+		
+		table.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				if(e.getClickCount()==2) {
+					JTable target = (JTable)e.getSource();
+					int row = target.getSelectedRow();
+					String jobid = table.getValueAt(row, 0).toString();
+					job_id = Integer.parseInt(jobid);
+					PreparedStatement ps=null;
+					ResultSet rs=null;
+					try {
+						ps = con.prepareStatement("select * from jobs where JOB_ID=?");
+						ps.setInt(1, job_id);
+						int index = 0;
+						rs = ps.executeQuery();
+						if(rs.next()) {
+							String status = rs.getString("STATUS");
+							if(status.equals("pending"))
+								index=0;
+							else if(status.equals("done"))
+								index=1;
+							else
+								index=2;
+							new Frame(con,job_id,"JOB_ID :"+jobid,rs.getDate("DATE"),rs.getTime("TIME"),rs.getString("job"),index).setVisible(true);
+							//Frame.lblNewLabel.setText("JOB_ID :"+job_id);
+							//Frame.lblNewLabel_1.setText("DATA :"+rs.getDate("DATE"));
+							//Frame.lblNewLabel_2.setText("DATA :"+rs.getDate("TIME"));
+							//Frame.textArea1.setText(rs.getString("job"));
+						}
+					}catch(SQLException sql) {
+						System.out.println("exception in "+sql.getMessage());
+					}
+					//loadData();
+				}
+			}
+		});
+		}catch(Exception s) {
+			System.out.println("sql exception : "+s.getMessage());
+		}
+	}
+	/*
+	public void loadData() {
+		try {
+			PreparedStatement ps = con.prepareStatement("select * from jobs where JOB_ID=?");
+			ps.setInt(1, job_id);
+			ResultSet rs = ps.executeQuery();
+			if(rs.next()) {
+				Frame.lblNewLabel.setText("JOB_ID :"+job_id);
+				Frame.lblNewLabel_1.setText("DATA :"+rs.getDate("DATE"));
+				Frame.lblNewLabel_2.setText("DATA :"+rs.getDate("TIME"));
+				Frame.textArea1.setText(rs.getString("job"));
+			}
+		}catch(SQLException sql) {
+			System.out.println("exception in "+sql.getMessage());
+		}
+	}
+	*/
+	
+	
+	public void setTableData(Object[][] data, String[] colNames) {
+		table.setModel(new DefaultTableModel(data,colNames));
+	}
+
+	/**
+	 * Create the frame.
+	 */
+	public ToDoListJFrame() {
+		getMySQLConnection();
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 568, 448);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+		
+		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		tabbedPane.setBounds(10, 37, 528, 361);
+		contentPane.add(tabbedPane);
+		
+		
+		
+
+		
+		
+		JPanel panel_1 = new JPanel();
+		panel_1.setBackground(Color.CYAN);
+		panel_1.setForeground(Color.WHITE);
+		tabbedPane.addTab("Create Job", null, panel_1, null);
+		panel_1.setLayout(null);
+		
+		JLabel lblNewLabel = new JLabel("Job Description");
+		lblNewLabel.setFont(new Font("Tahoma", Font.BOLD, 22));
+		lblNewLabel.setForeground(new Color(0, 0, 139));
+		lblNewLabel.setBounds(20, 10, 338, 34);
+		panel_1.add(lblNewLabel);
+		
+		JTextArea textArea = new JTextArea();
+		textArea.setBounds(20, 52, 482, 204);
+		panel_1.add(textArea);
+		
+		JButton btnNewButton = new JButton("Save");
+		btnNewButton.setForeground(new Color(255, 255, 255));
+		btnNewButton.setBackground(new Color(0, 0, 139));
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String jobText = textArea.getText();
+				PreparedStatement ps = null;
+				
+				if(jobText.length()!=0) {
+					Calendar calendar = Calendar.getInstance();
+					SimpleDateFormat format = new SimpleDateFormat("YYYY-MM-dd");
+					String date = format.format(calendar.getTime());
+					format = new SimpleDateFormat("HH:mm:ss");
+					String time = format.format(calendar.getTime());
+				    try{
+				      ps = con.prepareStatement("insert into JOBS(DATE , TIME , JOB , STATUS) VALUES(?, ?, ?, ?)");
+				      ps.setString(1 , date);
+				      ps.setString(2 , time);
+				      ps.setString(3 , jobText);
+				      ps.setString(4 ,  "Pending");
+				      ps.execute();
+				    }catch(SQLException s) {
+					System.out.println("SQL Exception in insertion"+s.getMessage());
+				    }
+				
+				    textArea.setText("");
+			}
+			}
+		});
+		btnNewButton.setFont(new Font("Tahoma", Font.PLAIN, 22));
+		btnNewButton.setBounds(191, 278, 115, 34);
+		panel_1.add(btnNewButton);
+		
+		JPanel panel = new JPanel();
+		panel.setBackground(new Color(124, 252, 0));
+		tabbedPane.addTab("View Jobs", null, panel, null);
+		panel.setLayout(null);
+		
+		table = new JTable();
+		table.setForeground(new Color(0, 0, 0));
+		table.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		table.setBackground(new Color(0, 255, 255));
+		
+		table.setBounds(0, 0, 523, 231);
+		panel.add(table);
+		
+		JButton btnNewButton_1 = new JButton("Refresh");
+		btnNewButton_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				fetchJobs();
+			}
+		});
+		btnNewButton_1.setForeground(new Color(255, 255, 255));
+		btnNewButton_1.setBackground(new Color(0, 0, 128));
+		btnNewButton_1.setFont(new Font("Tahoma", Font.BOLD, 18));
+		btnNewButton_1.setBounds(192, 271, 113, 39);
+		panel.add(btnNewButton_1);
+		
+		registerListner();
+		
+		
+		
+		JLabel lblNewLabel_1 = new JLabel("To Do List");
+		lblNewLabel_1.setForeground(Color.BLUE);
+		lblNewLabel_1.setFont(new Font("Tahoma", Font.BOLD, 36));
+		lblNewLabel_1.setBounds(178, 0, 347, 44);
+		contentPane.add(lblNewLabel_1);
+	}
+}
